@@ -1,0 +1,10 @@
+streamlit
+pypdf
+sentence-transformers
+chromadb
+numpy
+langchain
+torchvision
+reportlab
+
+

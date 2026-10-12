@@ -1,0 +1,20 @@
+# Python bytecode cache folders
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Streamlit operational configurations
+.streamlit/
+
+# Local virtual environment isolation sandbox
+venv/
+ENV/
+
+# Temporary storage runtime components
+temp_policy.pdf
+sample_corporate_policy.txt
+sample_corporate_policy.pdf
+
+# Local database store state
+.chroma/
