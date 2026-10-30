@@ -58,3 +58,14 @@ class VectorIndex:
                     relevant_chunks.append(document)
 
         return relevant_chunks
+
+
+# Require stronger keyword coverage before answering.
+best_score = max(item["score"] for item in candidates)
+
+if best_score < 0.65:
+    return (
+        "The uploaded policy does not provide sufficiently "
+        "relevant evidence to answer this question. "
+        "Please consult the relevant department for clarification."
+    ), [], best_score
