@@ -1,14 +1,21 @@
+
 import chromadb
 from chromadb.config import Settings
 
+
 class VectorIndex:
     def __init__(self):
-        # Build an isolated local server instance in memory for fast performance
         self.client = chromadb.Client(Settings(allow_reset=True))
-        self.collection = self.client.get_or_create_collection(name="compliance_index")
+
+        self.collection = self.client.get_or_create_collection(
+            name="compliance_index",
+            metadata={"hnsw:space": "cosine"}
+        )
 
     def upsert_documents(self, processed_chunks):
-        """Inserts vector arrays along with matching text metadata keys."""
+        if not processed_chunks:
+            return
+
         ids = [item["id"] for item in processed_chunks]
         embeddings = [item["vector"] for item in processed_chunks]
         metadatas = [item["metadata"] for item in processed_chunks]
@@ -21,17 +28,33 @@ class VectorIndex:
             documents=documents
         )
 
-    def query_context(self, query_vector: list, n_results: int = 2) -> list:
-        """Retrieves matching text entries using cosine-similarity distances."""
+    def query_context(
+        self,
+        query_vector: list,
+        n_results: int = 3,
+        max_distance: float = 0.55
+    ) -> list:
+
+        if self.collection.count() == 0:
+            return []
+
         results = self.collection.query(
             query_embeddings=[query_vector],
-            n_results=n_results
+            n_results=min(n_results, self.collection.count()),
+            include=["documents", "distances"]
         )
-        
-        # Flatten ChromaDB's deeply nested output down into a standard list of strings
-        flat_context = []
-        if results and "documents" in results and results["documents"]:
-            for nested_list in results["documents"]:
-                for document in nested_list:
-                    flat_context.append(document)
-        return flat_context
+
+        documents = results.get("documents") or [[]]
+        distances = results.get("distances") or [[]]
+
+        relevant_chunks = []
+
+        for document, distance in zip(
+            documents[0],
+            distances[0]
+        ):
+            if document and distance is not None:
+                if distance <= max_distance:
+                    relevant_chunks.append(document)
+
+        return relevant_chunks
