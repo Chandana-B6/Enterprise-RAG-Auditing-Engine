@@ -5,7 +5,9 @@ from chromadb.config import Settings
 
 class VectorIndex:
     def __init__(self):
-        self.client = chromadb.Client(Settings(allow_reset=True))
+        self.client = chromadb.Client(
+            Settings(allow_reset=True)
+        )
 
         self.collection = self.client.get_or_create_collection(
             name="compliance_index",
@@ -35,12 +37,14 @@ class VectorIndex:
         max_distance: float = 0.55
     ) -> list:
 
-        if self.collection.count() == 0:
+        count = self.collection.count()
+
+        if count == 0:
             return []
 
         results = self.collection.query(
             query_embeddings=[query_vector],
-            n_results=min(n_results, self.collection.count()),
+            n_results=min(n_results, count),
             include=["documents", "distances"]
         )
 
@@ -58,14 +62,3 @@ class VectorIndex:
                     relevant_chunks.append(document)
 
         return relevant_chunks
-
-
-# Require stronger keyword coverage before answering.
-best_score = max(item["score"] for item in candidates)
-
-if best_score < 0.65:
-    return (
-        "The uploaded policy does not provide sufficiently "
-        "relevant evidence to answer this question. "
-        "Please consult the relevant department for clarification."
-    ), [], best_score
