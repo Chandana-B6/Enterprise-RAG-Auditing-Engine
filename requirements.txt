@@ -3,8 +3,5 @@ pypdf
 sentence-transformers
 chromadb
 numpy
-langchain
-torchvision
+pandas
 reportlab
-
-
